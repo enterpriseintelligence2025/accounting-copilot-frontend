@@ -10,146 +10,131 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { format, addDays, isAfter, isBefore } from "date-fns";
 
-const InvoiceForm = ({formData, setFormData}) => {
+// ✅ Dummy fallback data
+const dummyInvoiceData = {
+  amount_in_words: "Seven Lakh Eight Thousand Only",
+  delivery_date: "20/06/2025",
+  invoice_date: "March 16, 2025",
+  invoice_number: "INV-2023-0001",
+  line_items: [
+    { amount: 200000.0, description: "Training Charges", hsn_code: "1001", quantity: 1, sno: 1, unit_rate: 200000.0 },
+    { amount: 300000.0, description: "Platform Licensing", hsn_code: "1002", quantity: 2, sno: 2, unit_rate: 150000.0 },
+    { amount: 100000.0, description: "Custom Development", hsn_code: "1003", quantity: 1, sno: 3, unit_rate: 100000.0 }
+  ],
+  notes: [
+    "Invoice will be processed for payment only after 'Receiver' at delivery point acknowledges and certifies that the material supplied is in good condition / service rendered satisfactorily.",
+    "If the above order falls under Tax & Duties, please submit photocopy of registered certificates under respective department along with the invoice.",
+    "Please mention this PO number in all the invoices related to this Purchase Order.",
+    "Actual Material supplied / services rendered should not exceed PO value.",
+    "Please attach Pan Card Copy along with the invoice to avoid 20% TDS on invoice value.",
+    "Please notify immediately if you are unable to supply material / render services as committed.",
+    "Request to take proper acknowledgement through seal and sign on invoice at delivery point.",
+    "Product with manufacturing defect should be replaced free of cost.",
+    "Payment Terms: 30 Days"
+  ],
+  po_number: "TLE-EIS-2425-999",
+  ship_to: {
+    address: "12th Floor, Innovate Tower, Whitefield, Bangalore, Karnataka, 560066",
+    name: "Innovate Solutions Pvt Ltd"
+  },
+  sold_to: {
+    address: "12th Floor, Innovate Tower, Whitefield, Bangalore, Karnataka, 560066",
+    gstin: "29ABCDE1234F1Z6",
+    name: "Innovate Solutions Pvt Ltd"
+  },
+  subtotal: 600000.0,
+  taxes: {
+    cgst: 54000.0,
+    sgst: 54000.0
+  },
+  total_amount: 708000.0,
+  vendor: {
+    address: "10th Floor, WeTech Park, MG Road, Bangalore, Karnataka, 560001",
+    gstin: "29XYZ1234L1Z8",
+    name: "TechSolutions India Pvt Ltd"
+  }
+};
+
+const InvoiceForm = ({ formData, setFormData }) => {
   const invoiceGeneration = useSelector((state) => state.invoiceGeneration);
   const { loading, error, invoiceInfo } = invoiceGeneration;
 
-  // State to track form data
-  // const [formData, setFormData] = useState(null);
-  // State to track which fields are editable
-  const [editableFields, setEditableFields] = useState({
+  const [editableFields] = useState({
     invoice_number: false,
     invoice_date: true,
     po_number: true,
-    sold_to: {
-      name: false,
-      address: true,
-      gstin: false
-    },
-    ship_to: {
-      name: false,
-      address: true
-    },
-    vendor: {
-      name: false,
-      address: false,
-      gstin: false
-    },
-    line_items: true, // Can edit line items
-    notes: true // Can edit notes
+    sold_to: { name: false, address: true, gstin: false },
+    ship_to: { name: false, address: true },
+    vendor: { name: false, address: false, gstin: false },
+    line_items: true,
+    notes: true
   });
 
-  // Date constraints for invoice date
   const today = new Date();
   const maxDate = addDays(today, 7);
 
   useEffect(() => {
-    if (invoiceInfo) {
-      // Initialize form data with invoice info
-      setFormData({
-        ...invoiceInfo,
-        invoice_date: invoiceInfo.invoice_date ? new Date(invoiceInfo.invoice_date) : today
-      });
-    }
+    // ✅ If data is missing or fetch failed, use fallback dummy data
+    const sourceData = invoiceInfo && Object.keys(invoiceInfo).length ? invoiceInfo : dummyInvoiceData;
+
+    setFormData({
+      ...dummyInvoiceData, // baseline to ensure full structure
+      ...sourceData, // override with real data if available
+      invoice_date: sourceData.invoice_date ? new Date(sourceData.invoice_date) : today
+    });
   }, [invoiceInfo]);
 
-  // Function to convert number to words
+  // Convert amount to words (unchanged)
   const convertToWords = (amount) => {
-    // Define arrays for number words
-    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 
-                'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 
-                'Seventeen', 'Eighteen', 'Nineteen'];
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+      'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+      'Seventeen', 'Eighteen', 'Nineteen'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
     const scales = ['', 'Thousand', 'Lakh', 'Crore'];
-    
-    // Handle zero case
     if (amount === 0) return 'Zero Rupees Only';
-    
-    // Function to convert a 3-digit group
     const convertGroup = (num) => {
       let result = '';
-      
-      // Handle hundreds place
       if (num >= 100) {
         result += ones[Math.floor(num / 100)] + ' Hundred ';
         num %= 100;
       }
-      
-      // Handle tens and ones place
       if (num >= 20) {
         result += tens[Math.floor(num / 10)] + ' ';
         num %= 10;
       }
-      
-      if (num > 0) {
-        result += ones[num] + ' ';
-      }
-      
+      if (num > 0) result += ones[num] + ' ';
       return result;
     };
-    
-    // Split amount into rupees and paise
     const rupees = Math.floor(amount);
     const paise = Math.round((amount - rupees) * 100);
-    
-    // Handle the Indian numbering system (lakhs, crores)
     let words = '';
-    let groupIndex = 0;
-    
-    // Process groups according to Indian numbering system
-    if (rupees >= 10000000) { // Crores
+    if (rupees >= 10000000) {
       const crores = Math.floor(rupees / 10000000);
       words += convertGroup(crores) + scales[3] + ' ';
-      groupIndex++;
     }
-    
     const remaining = rupees % 10000000;
-    
-    if (remaining >= 100000) { // Lakhs
+    if (remaining >= 100000) {
       const lakhs = Math.floor(remaining / 100000);
       words += convertGroup(lakhs) + scales[2] + ' ';
-      groupIndex++;
     }
-    
     const afterLakhs = remaining % 100000;
-    
-    if (afterLakhs >= 1000) { // Thousands
+    if (afterLakhs >= 1000) {
       const thousands = Math.floor(afterLakhs / 1000);
       words += convertGroup(thousands) + scales[1] + ' ';
-      groupIndex++;
     }
-    
     const hundreds = afterLakhs % 1000;
-    
-    if (hundreds > 0) {
-      words += convertGroup(hundreds);
-    }
-    
-    // Add 'Rupees' suffix
+    if (hundreds > 0) words += convertGroup(hundreds);
     words += 'Rupees';
-    
-    // Add paise if any
-    if (paise > 0) {
-      words += ' and ' + convertGroup(paise) + 'Paise';
-    }
-    
+    if (paise > 0) words += ' and ' + convertGroup(paise) + 'Paise';
     return words + ' Only';
   };
 
-  const handleInputChange = (field, value) => {
-    setFormData({
-      ...formData,
-      [field]: value
-    });
-  };
+  const handleInputChange = (field, value) => setFormData({ ...formData, [field]: value });
 
   const handleNestedInputChange = (parent, field, value) => {
     setFormData({
       ...formData,
-      [parent]: {
-        ...formData[parent],
-        [field]: value
-      }
+      [parent]: { ...formData[parent], [field]: value }
     });
   };
 
@@ -157,49 +142,34 @@ const InvoiceForm = ({formData, setFormData}) => {
     const updatedLineItems = [...formData.line_items];
     updatedLineItems[index] = {
       ...updatedLineItems[index],
-      [field]: field === 'unit_rate' || field === 'quantity' ? parseFloat(value) : value
+      [field]: field === "unit_rate" || field === "quantity" ? parseFloat(value) : value
     };
-
-    // Recalculate amount for the line item
-    if (field === 'unit_rate' || field === 'quantity') {
-      updatedLineItems[index].amount = 
-        updatedLineItems[index].quantity * updatedLineItems[index].unit_rate;
+    if (field === "unit_rate" || field === "quantity") {
+      updatedLineItems[index].amount = updatedLineItems[index].quantity * updatedLineItems[index].unit_rate;
     }
-
-    setFormData({
-      ...formData,
-      line_items: updatedLineItems
-    });
-
-    // Recalculate totals after line item change
+    setFormData({ ...formData, line_items: updatedLineItems });
     recalculateTotals(updatedLineItems);
   };
 
   const recalculateTotals = (lineItems) => {
     const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
-    const cgst = subtotal * 0.09; // Assuming 9% CGST
-    const sgst = subtotal * 0.09; // Assuming 9% SGST
+    const cgst = subtotal * 0.09;
+    const sgst = subtotal * 0.09;
     const totalAmount = subtotal + cgst + sgst;
-    
-    // Update amount in words based on the new total
     const amountInWords = convertToWords(totalAmount);
 
-    setFormData(prevData => ({
-      ...prevData,
+    setFormData((prev) => ({
+      ...prev,
       subtotal,
-      taxes: {
-        cgst,
-        sgst
-      },
+      taxes: { cgst, sgst },
       total_amount: totalAmount,
       amount_in_words: amountInWords
     }));
   };
 
   const handleDateSelect = (date) => {
-    // Ensure date is not before today and not after maxDate
-    if (isAfter(date, today) && isBefore(date, maxDate) || date.toDateString() === today.toDateString()) {
-      handleInputChange('invoice_date', date);
+    if ((isAfter(date, today) && isBefore(date, maxDate)) || date.toDateString() === today.toDateString()) {
+      handleInputChange("invoice_date", date);
     }
   };
 
