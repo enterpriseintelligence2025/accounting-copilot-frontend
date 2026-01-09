@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Upload, FileText, Check, AlertCircle, Loader2 } from "lucide-react"
-import { uploadFileAPI, generateInvoiceAPI } from "../redux/actions/invoiceActions"
+import { generateInvoiceAPI } from "../redux/actions/invoiceActions"
 import InvoiceForm from "./InvoiceGenerationComponents/InvoicePreview"
 import { useDispatch, useSelector } from "react-redux"
 import useGenerateInvoicePDF from "../hooks/invoicePdfGenerator"
@@ -15,30 +15,43 @@ export default function InvoiceGeneration() {
   const [status, setStatus] = useState("idle")
   const [progress, setProgress] = useState(0)
   const [invoiceData, setInvoiceData] = useState(null)
-  const [filePath, setFilePath] = useState("")
-  
+  // const [filePath, setFilePath] = useState("")
+
+  const [failureMessage, setFailureMessage] = useState(null)
+  const [nextSteps, setNextSteps] = useState(null)
+
+
   const fileUpload = useSelector((state) => state.fileUpload)
-  const {success:fileUploadSuccess, loading:fileUploadLoading, fileInfo} = fileUpload
+  // const {success:fileUploadSuccess, loading:fileUploadLoading, fileInfo} = fileUpload
 
   const invoiceGeneration = useSelector((state) => state.invoiceGeneration)
-  const { loading, error: invoiceGenerationError ,success:invoiceGenerationSuccess, invoiceInfo } = invoiceGeneration
+  const { loading, error: invoiceGenerationError, success: invoiceGenerationSuccess, invoiceInfo } = invoiceGeneration
 
   const [formData, setFormData] = useState(null);
 
   const generatePdf = useGenerateInvoicePDF(formData)
 
-  useEffect(()=>{
+  useEffect(() => {
     // console.log('form data changed',formData);
-    
-  },[formData])
-  
+
+  }, [formData])
+
   const dispatch = useDispatch()
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0])
+
+      // 🔁 RESET EVERYTHING
+      setStatus("idle")
+      setProgress(0)
+      setInvoiceData(null)
+      setFormData(null)
+      setFailureMessage(null)
+      setNextSteps(null)
     }
   }
+
 
   const handleUpload = async () => {
     if (!file) return
@@ -46,49 +59,36 @@ export default function InvoiceGeneration() {
     setStatus("uploading")
     setProgress(0)
 
-    // Simulate upload progress
     const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          return 100
-        }
-        return prev + 10
-      })
-    }, 300)
+      setProgress((prev) => (prev >= 100 ? 100 : prev + 10))
+    }, 200)
 
-    try {
-      dispatch(uploadFileAPI("INVOICING", file)) // Upload using RAG flag
-      setProgress(100)
-      // if(fileInfo && fileUploadSuccess){
-      //   setFilePath(fileInfo.filePath)
-      //   await handleGenerateInvoice(response.payload.filePath)
-      // } // Store the file path from the response
-      // setStatus("analyzing")
-
-      // Trigger invoice generation upon successful upload
-      
-    } catch (error) {
-      setStatus("error")
-      console.error("Error during file upload:", error)
-    }
+    dispatch(generateInvoiceAPI(file))
   }
 
-  useEffect(()=>{
-    if((fileInfo && fileUploadSuccess==true && fileUploadLoading==false) && (!invoiceGenerationError && !invoiceGenerationSuccess==true) ){
-      setFilePath(fileInfo.file_path)
 
-      // setStatus("analyzing: ",fileInfo.file_path)
-      handleGenerateInvoice(fileInfo.file_path)
-      setStatus("analyzing")
-    } // Store the file path from the response
-    // setStatus("analyzing")
-
-    if(invoiceInfo && invoiceGenerationSuccess){
+  useEffect(() => {
+    if (invoiceInfo && invoiceGenerationSuccess) {
       setInvoiceData(invoiceInfo)
+      setFormData(invoiceInfo)   // important
       setStatus("completed")
+      setProgress(100)
     }
-  },[fileUploadSuccess, fileInfo, invoiceGenerationSuccess, invoiceInfo])
+
+    if (invoiceGenerationError) {
+      setStatus("error")
+      setProgress(0)
+
+      // Handle backend structured failure
+      if (typeof invoiceGenerationError === "object") {
+        setFailureMessage(invoiceGenerationError.issues?.[0])
+        setNextSteps(invoiceGenerationError.next_steps?.[0])
+      } else {
+        setFailureMessage(invoiceGenerationError)
+      }
+    }
+  }, [invoiceGenerationSuccess, invoiceInfo, invoiceGenerationError])
+
 
   const handleGenerateInvoice = async (path) => {
     try {
@@ -232,6 +232,27 @@ export default function InvoiceGeneration() {
       {renderUploadSection()}
       {renderProcessingStatus()}
       {renderInvoicePreview()}
+      {status === "error" && (
+        <div className="mt-3 p-3 border border-destructive/40 rounded-lg bg-destructive/5">
+          <div className="flex items-center text-destructive mb-1">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <span className="font-medium">Processing Failed</span>
+          </div>
+
+          {failureMessage && (
+            <p className="text-sm text-destructive">
+              {failureMessage}
+            </p>
+          )}
+
+          {nextSteps && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Next step: {nextSteps}
+            </p>
+          )}
+        </div>
+      )}
+
     </div>
   )
 }

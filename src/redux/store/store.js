@@ -1,14 +1,15 @@
 import { combineReducers } from "redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { thunk } from "redux-thunk";
-import { generateInvoiceReducer, reconciliationReducer, uploadFileReducer, uploadInvoiceReducer, uploadPOReducer } from "../reducers/invoiceReducers";
+import { invoiceGenerationReducer } from "../reducers/invoiceReducers";
+import { generateInvoiceReducer, reconciliationReducer, uploadFileReducer, uploadInvoiceReducer } from "../reducers/invoiceReducers";
 // import InvoiceGeneration from "@//components/invoiceGeneration";
 
 const reducers = combineReducers({
     fileUpload: uploadFileReducer,
-    poUpload: uploadPOReducer,
+    // poUpload: uploadPOReducer,
     invoiceUpload: uploadInvoiceReducer,
-    invoiceGeneration: generateInvoiceReducer,
+    invoiceGeneration: invoiceGenerationReducer,
     reconciliation: reconciliationReducer,
 });
 

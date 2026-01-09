@@ -1,15 +1,55 @@
-import axios from "axios";
+import axios from "axios"
+import { GENERATE_INVOICE_REQUEST, GENERATE_INVOICE_SUCCESS, GENERATE_INVOICE_FAIL, RECONCILIATION_REQUEST, RECONCILIATION_SUCCESS, RECONCILIATION_FAIL } from "../constants/invoiceConstants"
+
+export const generateInvoiceAPI = (file) => async (dispatch) => {
+  try {
+    dispatch({ type: GENERATE_INVOICE_REQUEST })
+
+    const formData = new FormData()
+    formData.append("file", file)
+
+    const { data } = await axios.post(
+      "http://localhost:9000/invoice/generate",
+      formData,
+      {
+        headers: {
+          // "Content-Type": "multipart/form-data"
+          "Content-Type": "application/pdf"
+        }
+      }
+    )
+
+    dispatch({
+      type: GENERATE_INVOICE_SUCCESS,
+      payload: data.data   // <- invoice JSON
+    })
+  } catch (error) {
+    dispatch({
+      type: GENERATE_INVOICE_FAIL,
+      payload: error.response?.data || {
+      issues: ["Unexpected error occurred"],
+      next_steps: ["Try again later"]
+    }
+  })
+  }
+}
+
+
+
+
+
+// import axios from "axios";
 
 import {
     UPLOAD_FILE_REQUEST,
     UPLOAD_FILE_SUCCESS,
     UPLOAD_FILE_FAIL,
-    GENERATE_INVOICE_REQUEST,
-    GENERATE_INVOICE_SUCCESS,
-    GENERATE_INVOICE_FAIL,
-    RECONCILIATION_REQUEST,
-    RECONCILIATION_SUCCESS,
-    RECONCILIATION_FAIL,
+    // GENERATE_INVOICE_REQUEST,
+    // GENERATE_INVOICE_SUCCESS,
+    // GENERATE_INVOICE_FAIL,
+    // RECONCILIATION_REQUEST,
+    // RECONCILIATION_SUCCESS,
+    // RECONCILIATION_FAIL,
     UPLOAD_PO_FAIL,
     UPLOAD_PO_REQUEST,
     UPLOAD_PO_SUCCESS,
@@ -119,78 +159,79 @@ export const uploadInvoiceAPI = (file) => async(dispatch) => {
     }
 }
 
-export const generateInvoiceAPI = (filePath) => async(dispatch) => {
-    try{
-        dispatch({type: GENERATE_INVOICE_REQUEST})
-        // e7fe8081-0b38-4985-820f-244a02347ccc/2025-03-19_16-43-05_TLE-EIS-2425-776-Kloudineer (1) (1).pdf
-        // const filePath = "e7fe8081-0b38-4985-820f-244a02347ccc/2025-03-19_11-57-16_TLE-EIS-2425-776-Kloudineer (1) (1).pdf"
-        console.log('Making api for generating invoice via file:', filePath);
-        const {data} = await axios.post(`${baseUrl}/api/v1/run/${AI_PLAYGROUND_WORKFLOWS.INVOICING.flowId}?stream=false`,{
-            // input_value: "What is inside the file.",
-            output_type: "chat",
-            input_type: "chat",
-            tweaks: {
-                [AI_PLAYGROUND_WORKFLOWS.INVOICING.fileComponentId]: {
-                    "path":filePath
-                }
-            }
-        },{
-            headers:{
-                // 'Content-Type': 'multipart/form-data',
-                'x-api-key': `${API_KEY}`
-            }
+// export const generateInvoiceAPI = (filePath) => async(dispatch) => {
+//     try{
+//         dispatch({type: GENERATE_INVOICE_REQUEST})
+//         // e7fe8081-0b38-4985-820f-244a02347ccc/2025-03-19_16-43-05_TLE-EIS-2425-776-Kloudineer (1) (1).pdf
+//         // const filePath = "e7fe8081-0b38-4985-820f-244a02347ccc/2025-03-19_11-57-16_TLE-EIS-2425-776-Kloudineer (1) (1).pdf"
+//         console.log('Making api for generating invoice via file:', filePath);
+//         const {data} = await axios.post(`${baseUrl}/api/v1/run/${AI_PLAYGROUND_WORKFLOWS.INVOICING.flowId}?stream=false`,{
+//             // input_value: "What is inside the file.",
+//             output_type: "chat",
+//             input_type: "chat",
+//             tweaks: {
+//                 [AI_PLAYGROUND_WORKFLOWS.INVOICING.fileComponentId]: {
+//                     "path":filePath
+//                 }
+//             }
+//         },{
+//             headers:{
+//                 // 'Content-Type': 'multipart/form-data',
+//                 'x-api-key': `${API_KEY}`
+//             }
+//         }
+//     )
+
+//         console.log('if: ',data.outputs[0].outputs[0].messages[0].message);
+//         const invoiceData = JSON.parse(data.outputs[0].outputs[0].messages[0].message)
+        
+//         dispatch({type: GENERATE_INVOICE_SUCCESS, payload: invoiceData})
+        
+//         return invoiceData
+//     }catch(error){
+//         console.log('Error:', error)
+//         dispatch({type: GENERATE_INVOICE_FAIL,
+//             payload: error.response?.data?.message || error.message,
+//         })
+//     }
+// }
+
+export const reconcileAPI = (poFile, invoiceFile) => async (dispatch) => {
+  try {
+    dispatch({ type: RECONCILIATION_REQUEST })
+
+    const formData = new FormData()
+    formData.append("po", poFile)
+    formData.append("invoice", invoiceFile)
+
+    const { data } = await axios.post(
+      "http://localhost:9000/reconcile",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data"
         }
+      }
     )
 
-        console.log('if: ',data.outputs[0].outputs[0].messages[0].message);
-        const invoiceData = JSON.parse(data.outputs[0].outputs[0].messages[0].message)
-        
-        dispatch({type: GENERATE_INVOICE_SUCCESS, payload: invoiceData})
-        
-        return invoiceData
-    }catch(error){
-        console.log('Error:', error)
-        dispatch({type: GENERATE_INVOICE_FAIL,
-            payload: error.response?.data?.message || error.message,
-        })
+    if (data.status === "failure") {
+      dispatch({
+        type: RECONCILIATION_FAIL,
+        payload: data
+      })
+      return
     }
-}
 
-export const reconcileAPI = (poFile, invoiceFile) => async(dispatch) => {
-    try{
-        dispatch({type:RECONCILIATION_REQUEST})
-        console.log('reconciling: ', poFile.file_path, invoiceFile.file_path);
-        
-        const {data} = await axios.post(
-            `${baseUrl}/api/v1/run/${AI_PLAYGROUND_WORKFLOWS.RECONCILING.flowId}?stream=false`,{
-                tweaks: {
-                    [AI_PLAYGROUND_WORKFLOWS.RECONCILING.poComponent]: {
-                        "path":poFile.file_path
-                    },
-                    [AI_PLAYGROUND_WORKFLOWS.RECONCILING.invoiceComponent]: {
-                        "path":invoiceFile.file_path
-                    }
-                }
-            },{
-                headers:{
-                    // 'Content-Type': 'multipart/form-data',
-                    'x-api-key': `${API_KEY}`
-                }
-            }
-        )
-
-        // API logic
-        // console.log('Reconciliation data:', data.outputs[0].outputs[0].messages[0].message);
-        const reconciliationData = JSON.parse(data.outputs[0].outputs[0].messages[0].message)
-        // console.log('recon status:',reconciliationData.status);
-        // console.log('descrepancies:',reconciliationData.discrepancies);
-        
-        
-        dispatch({type:RECONCILIATION_SUCCESS, payload: reconciliationData})
-    }catch(error){
-        console.log('Error:', error)
-        dispatch({type:RECONCILIATION_FAIL,
-            payload: error.response?.data?.message || error.message,
-        })
-    }
+    dispatch({
+      type: RECONCILIATION_SUCCESS,
+      payload: data.data
+    })
+  } catch (error) {
+    dispatch({
+      type: RECONCILIATION_FAIL,
+      payload:
+        error.response?.data?.issues ||
+        ["Unexpected reconciliation failure"]
+    })
+  }
 }
