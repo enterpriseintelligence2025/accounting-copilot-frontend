@@ -1,3 +1,9 @@
+/*
+  InvoicePreview.jsx
+  - Editable invoice preview used after invoice extraction completes.
+  - Provides simple field editing and recalculation of totals.
+  - Uses a small fallback `dummyInvoiceData` when backend data is missing.
+*/
 import { useState, useEffect } from "react";
 import { CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";

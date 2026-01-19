@@ -1,8 +1,12 @@
-// hooks/useGenerateInvoicePDF.js
+/*
+  hooks/invoicePdfGenerator.js
+  - Small hook that returns a `generatePDF` function configured with `jsPDF`.
+  - Produces a printable invoice PDF from a provided invoice object.
+  - Note: Fonts and bank details are optional and currently commented out.
+*/
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
-// import robotoFont from "./Roboto-Regular-normal.js";
 
 const useGenerateInvoicePDF = (invoiceData) => {
   const generatePDF = () => {
@@ -10,11 +14,7 @@ const useGenerateInvoicePDF = (invoiceData) => {
 
     // Header
     doc.setFont("helvetica", "bold");
-    // Load the custom font
-    // doc.addFileToVFS("Roboto-Regular.ttf", robotoFont);
-    // doc.addFont("Roboto-Regular.ttf", "Roboto", "normal"); 
-    // doc.setFont("Roboto"); 
-    // doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
+    // If using custom fonts, add them to the VFS and call doc.addFont
     doc.setFont("NotoSans", "normal");
     
     doc.setFontSize(14);
@@ -59,10 +59,6 @@ const useGenerateInvoicePDF = (invoiceData) => {
       { header: "Quantity", dataKey: "quantity" },
       { header: "Rate", dataKey: "unit_rate" },
       { header: "Base Amount", dataKey: "amount" },
-      // { header: "Tax Type", dataKey: "tax_type" },
-      // { header: "Tax Rate (%)", dataKey: "tax_rate" },
-      // { header: "Tax Amount (₹)", dataKey: "tax_amount" },
-      // { header: "Total Amount (₹)", dataKey: "total_amount" }
     ];
 
     const tableRows = invoiceData.line_items.map((item) => ({
@@ -70,10 +66,6 @@ const useGenerateInvoicePDF = (invoiceData) => {
       quantity: item.quantity,
       unit_rate: item.unit_rate.toFixed(2),
       amount: item.amount.toFixed(2),
-      // tax_type: item.tax_type,
-      // tax_rate: item.tax_rate.toFixed(2),
-      // tax_amount: item.tax_amount.toFixed(2),
-      // total_amount: item.total_amount.toFixed(2),
     }));
 
     // Generate Table
@@ -92,9 +84,7 @@ const useGenerateInvoicePDF = (invoiceData) => {
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("Subtotal:", 150, finalY + 10, { align: "right" });
-    
 
-    // '₹'
     doc.text(`INR. ${invoiceData.subtotal.toFixed(2)}`, 196, finalY + 10, {
       align: "right",
     });
@@ -142,15 +132,6 @@ const useGenerateInvoicePDF = (invoiceData) => {
       doc.text(wrappedText, 14, noteY);
       noteY += wrappedText.length * 5; // Adjust spacing dynamically
     });
-
-    // Bank Details
-    // doc.setFont("helvetica", "bold");
-    // doc.text("Remittance Information:", 14, noteY + 10);
-    // doc.setFont("helvetica", "normal");
-    // doc.text(`Account Holder: ${invoiceData.vendor.name}`, 14, noteY + 15);
-    // doc.text(`Bank Account Number: ${invoiceData.vendor.bank_account}`, 14, noteY + 20);
-    // doc.text(`IFSC Code: ${invoiceData.vendor.ifsc}`, 14, noteY + 25);
-    // doc.text(`Bank Name: ${invoiceData.vendor.bank_name}`, 14, noteY + 30);
 
     // Footer & Signatures
     const pageHeight = doc.internal.pageSize.height;

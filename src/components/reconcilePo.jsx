@@ -1,3 +1,8 @@
+/*
+  reconcilePo.jsx
+  - UI for uploading a Purchase Order (PO) and an Invoice and running reconciliation.
+  - Manages drag/drop uploads, displays reconciliation progress and results.
+*/
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"

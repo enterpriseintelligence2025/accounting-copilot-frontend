@@ -1,3 +1,8 @@
+/*
+  UserInputs.jsx
+  - Handles the user's text input and optional file attachments for chat.
+  - Streams assistant responses from the backend and appends chunks to the last assistant message.
+*/
 import { cn } from "../../lib/utils"
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -13,11 +18,11 @@ const UserInputs = ({ message: messages, setMessages }) => {
 
     setUploading(true)
 
-    // 1️⃣ Add user message
+    // 1️⃣ Add user message to UI state
     const userMessage = { role: "user", content: inputValue }
     setMessages((prev) => [...prev, userMessage])
 
-    // 2️⃣ Create placeholder assistant message
+    // 2️⃣ Insert a placeholder assistant message that will be updated as chunks arrive
     const assistantMessage = { role: "assistant", content: "" }
     setMessages((prev) => [...prev, assistantMessage])
 
@@ -39,6 +44,7 @@ const UserInputs = ({ message: messages, setMessages }) => {
         throw new Error("Streaming failed")
       }
 
+      // Read streaming response and append text chunks to the last assistant message
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
 
@@ -64,6 +70,7 @@ const UserInputs = ({ message: messages, setMessages }) => {
       }
     } catch (error) {
       console.error("Chat stream error:", error)
+      // Replace the placeholder assistant message with an error notice
       setMessages((prev) => [
         ...prev.slice(0, -1),
         {
@@ -73,6 +80,7 @@ const UserInputs = ({ message: messages, setMessages }) => {
       ])
     }
 
+    // Reset input and upload state
     setInputValue("")
     setFiles([])
     setUploading(false)

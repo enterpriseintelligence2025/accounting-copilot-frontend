@@ -1,10 +1,14 @@
+/*
+  layoutPage.jsx
+  - Main application layout that composes `SideBar` and the three primary flows:
+    - Chat prompt
+    - Generate Invoice
+    - Reconcile PO & Invoice
+*/
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { MessageCircle, FileText, FileCheck } from "lucide-react"
-// import InvoiceGeneration from "@/components/invoiceGeneration.jsx"
-// import ReconcilePO from "@/components/reconcilePo.jsx"
-// import ChatInterface from "@/components/chatInterface.jsx"
 import InvoiceGeneration from "../components/invoiceGeneration"
 import ReconcilePO from "../components/reconcilePo"
 import ChatInterface from "../components/chatInterface"

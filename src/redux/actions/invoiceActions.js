@@ -1,3 +1,8 @@
+/*
+  redux/actions/invoiceActions.js
+  - Contains thunk actions for uploading files, generating invoices and running reconciliation.
+  - Uses `axios` and environment variables for API endpoints.
+*/
 import axios from "axios"
 import { GENERATE_INVOICE_REQUEST, GENERATE_INVOICE_SUCCESS, GENERATE_INVOICE_FAIL, RECONCILIATION_REQUEST, RECONCILIATION_SUCCESS, RECONCILIATION_FAIL } from "../constants/invoiceConstants"
 
@@ -15,7 +20,7 @@ export const generateInvoiceAPI = (file) => async (dispatch) => {
       formData,
       {
         headers: {
-          // "Content-Type": "multipart/form-data"
+          // Backend expects a file upload; adjust `Content-Type` if required by the server
           "Content-Type": "application/pdf"
         }
       }

@@ -1,3 +1,8 @@
+/*
+  Header.jsx
+  - Top-level header used across the app.
+  - Minimal, presentational component (logo + short intro message).
+*/
 import React from 'react'
 import { Button } from "@/components/ui/button";
 import { cn } from "../lib/utils";
@@ -14,36 +19,16 @@ const Header = () => {
                         <div className="text-2xl font-bold">
                             <span>△</span> 
                         </div>
-                        {/* Navigation */}
+                        {/* Navigation / short product tagline */}
                         <div>
                         <span>Hi it's </span>
                         <span style={{ fontSize:'30px',fontWeight:'bold'}}>Ivy, </span>
                         <span>your enterprise accounting copilot </span>
                         </div>
-                        {/* <nav className="flex space-x-6 text-sm font-semibold">
-                            <a href="#" className="hover:text-gray-500">
-                                Home
-                            </a>
-                            <a href="#" className="hover:text-gray-500">
-                                About
-                            </a>
-                            <a href="#" className="hover:text-gray-500">
-                                Services
-                            </a>
-                            <a href="#" className="hover:text-gray-500">
-                                Contact
-                            </a>
-                        </nav> */}
                     </div>
 
-                    {/* Action Buttons */}
+                    {/* Action Buttons (kept commented during early development) */}
                     <div className="flex space-x-4">
-                        {/* <Button variant="outline" className="px-4">
-                            Sign in
-                        </Button>
-                        <Button className="bg-black text-white hover:bg-gray-800 px-4">
-                            Sign Up
-                        </Button> */}
                     </div>
                 </div>
             </header>

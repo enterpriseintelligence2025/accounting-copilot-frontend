@@ -1,3 +1,8 @@
+/*
+  invoiceGeneration.jsx
+  - Component that handles uploading a Purchase Order (PO) and triggering invoice generation.
+  - Shows upload progress, handles response/errors, and displays an editable invoice preview.
+*/
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"

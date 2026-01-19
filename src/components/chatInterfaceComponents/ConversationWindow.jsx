@@ -1,3 +1,16 @@
+/*
+  ConversationWindow.jsx
+  - Renders the list of chat messages using `react-markdown`.
+  - Supports GitHub-flavored markdown and KaTeX for math rendering.
+  - Auto-scrolls to the latest message using a ref.
+*/
+/*
+  ConversationWindow.jsx
+  - Renders the chat message list.
+  - Uses `react-markdown` with math and GitHub-flavored markdown support so assistant
+    responses can include rich content (tables, code blocks, math).
+  - Automatically scrolls to the newest message via `messagesEndRef`.
+*/
 import React, { useEffect, useRef } from "react"
 import { cn } from "../../lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,9 +21,11 @@ import remarkMath from "remark-math"
 import rehypeKatex from "rehype-katex"
 
 const ConversationWindow = ({ messages, setMessages }) => {
+  // Reference to the bottom of the message list for auto-scrolling
   const messagesEndRef = useRef(null)
 
   useEffect(() => {
+    // Smooth-scroll to the latest message when `messages` updates
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
@@ -21,6 +36,7 @@ const ConversationWindow = ({ messages, setMessages }) => {
           key={index}
           className={cn(
             "flex my-3",
+            // Align user messages to the right, assistant to the left
             message.role === "user" ? "justify-end" : "justify-start"
           )}
         >
@@ -42,7 +58,7 @@ const ConversationWindow = ({ messages, setMessages }) => {
                     <p className="mb-2 last:mb-0">{children}</p>
                   ),
 
-                  // Code blocks
+                  // Code blocks: inline vs block styling
                   code: ({ inline, className, children }) => {
                     if (inline) {
                       return (

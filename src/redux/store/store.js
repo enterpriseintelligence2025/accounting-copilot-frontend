@@ -1,9 +1,13 @@
+/*
+  redux/store/store.js
+  - Configures the Redux store used by the app.
+  - Exposes preloaded state and applies `redux-thunk` middleware for async actions.
+*/
 import { combineReducers } from "redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { thunk } from "redux-thunk";
 import { invoiceGenerationReducer } from "../reducers/invoiceReducers";
 import { generateInvoiceReducer, reconciliationReducer, uploadFileReducer, uploadInvoiceReducer } from "../reducers/invoiceReducers";
-// import InvoiceGeneration from "@//components/invoiceGeneration";
 
 const reducers = combineReducers({
     fileUpload: uploadFileReducer,
@@ -14,10 +18,6 @@ const reducers = combineReducers({
 });
 
 const initialState = {
-  // userLogin: { userInfo: userInfoFromStorage },
-  // domainsList: {domainsListInfo: domainsListInfoFromStorage},
-  // learningPathDetails: { learningPathInfo: learningPathInfoFromStorage },
-  // newsArticles: { newsInfo: newsArticlesFromStorage },
 };
 
 const store = configureStore({

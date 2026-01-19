@@ -1,3 +1,8 @@
+/*
+  SideBar.jsx
+  - Collapsible navigation used by the main layout.
+  - Exposes `activeTab` and `setActiveTab` to change content panels.
+*/
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, MessageCircle, FileText, FileCheck, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,7 +10,6 @@ import { cn } from "../lib/utils"
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const [collapsed, setCollapsed] = useState(false);
-  //   const [activeTab, setActiveTab] = useState("chat");
 
   return (
     <div
@@ -17,9 +21,6 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     >
       <div className="flex items-center justify-between mb-4">
         <span>
-          {/* {!collapsed && (
-          <h2 className="text-2xl font-bold text-primary">Invoice AI</h2>
-        )} */}
           {!collapsed && (
             <p className="text-sm text-muted-foreground my-2">
               As your personal assistant, I can help you with the following tasks...
@@ -38,12 +39,6 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           </Button>
         </span>
       </div>
-
-      {/* {!collapsed && (
-        // <p className="text-sm text-muted-foreground mb-8">
-        //   Your personal invoice assistant
-        // </p>
-      )} */}
 
       <nav className="space-y-2 flex-1">
         <Button
